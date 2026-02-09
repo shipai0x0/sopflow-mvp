@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;800&display=swap" rel="stylesheet">
+    <title>SOPFlow MVP</title>
+    <style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background: #020617; }
+        .glow { box-shadow: 0 0 50px -12px rgba(99, 102, 241, 0.4); }
+    </style>
+</head>
+<body class="text-slate-300 antialiased min-h-screen">
+    <div class="max-w-7xl mx-auto px-6 py-8">
+        <nav class="flex justify-between items-center mb-20">
+            <div class="flex items-center space-x-2">
+                <div class="w-10 h-10 bg-gradient-to-br from-indigo-500 to-cyan-400 rounded-xl flex items-center justify-center font-bold text-white text-xl">S</div>
+                <span class="text-white font-extrabold text-xl">SOPFlow</span>
+            </div>
+            <span class="text-xs font-mono text-slate-500 uppercase tracking-widest">MVP v1.0</span>
+        </nav>
+
+        <header class="text-center mb-16">
+            <h1 class="text-5xl font-black text-white mb-6">Video to <span class="text-indigo-400">SOP</span> converter</h1>
+            <p class="text-slate-400 max-w-xl mx-auto">Paste your video link below to generate professional documentation in seconds.</p>
+        </header>
+
+        <div class="max-w-2xl mx-auto">
+            <div class="flex flex-col gap-4 mb-12">
+                <input type="text" id="videoUrl" placeholder="https://www.loom.com/share/..." 
+                       class="bg-white/5 border border-white/10 rounded-2xl px-6 py-4 text-white focus:outline-none focus:ring-2 focus:ring-indigo-500 transition">
+                <button onclick="generateSOP()" id="btn" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-4 rounded-2xl glow transition-all">
+                    Generate Documentation
+                </button>
+            </div>
+
+            <div id="loader" class="hidden text-center py-10">
+                <div class="animate-spin inline-block w-8 h-8 border-4 border-indigo-500 border-t-transparent rounded-full mb-4"></div>
+                <p class="text-indigo-400 font-medium">AI is watching your video...</p>
+            </div>
+
+            <div id="resultContainer" class="hidden bg-white/5 border border-white/10 rounded-[32px] p-8 backdrop-blur-xl">
+                <div class="flex justify-between items-center mb-6">
+                    <h3 class="text-white font-bold">Generated SOP</h3>
+                    <button onclick="copySOP()" class="text-xs text-indigo-400 hover:text-white transition uppercase font-bold tracking-widest">Copy Markdown</button>
+                </div>
+                <pre id="output" class="text-sm text-slate-400 whitespace-pre-wrap font-mono bg-black/30 p-6 rounded-2xl border border-white/5"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function generateSOP() {
+            const videoUrl = document.getElementById('videoUrl').value;
+            if (!videoUrl) return alert('Please paste a link first');
+
+            const btn = document.getElementById('btn');
+            const loader = document.getElementById('loader');
+            const resultContainer = document.getElementById('resultContainer');
+            const output = document.getElementById('output');
+
+            btn.disabled = true;
+            btn.classList.add('opacity-50');
+            loader.classList.remove('hidden');
+            resultContainer.classList.add('hidden');
+
+            try {
+                const response = await fetch('/api/generate', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ videoUrl })
+                });
+                const data = await response.json();
+                output.textContent = data.markdown;
+                resultContainer.classList.remove('hidden');
+            } catch (e) {
+                alert('Connection error. Is the server running?');
+            } finally {
+                loader.classList.add('hidden');
+                btn.disabled = false;
+                btn.classList.remove('opacity-50');
+            }
+        }
+
+        function copySOP() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text);
+            alert('Copied to clipboard!');
+        }
+    </script>
+</body>
+</html>
